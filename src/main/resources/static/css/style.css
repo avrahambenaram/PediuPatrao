@@ -13,12 +13,12 @@ body {
     height: 100vh;
 }
 
-#sidebar a {
+#sidebar li a {
     color: white;
     text-decoration: none;
 }
 
-#sidebar a:hover {
+#sidebar li a:hover {
     background-color: #495057;
     color: white;
 }
