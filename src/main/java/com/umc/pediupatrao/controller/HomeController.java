@@ -6,6 +6,7 @@ import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
+import com.umc.pediupatrao.entity.UsuarioRole;
 import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
@@ -40,6 +41,25 @@ public class HomeController {
     @GetMapping("/registrar")
     public String registrar() {
         return "registrar";
+    }
+
+    @PostMapping("/registrar")
+    public String registrarUsuario(
+        @ModelAttribute Usuario usuario,
+        RedirectAttributes redirectAttributes
+    ) {
+      try {
+        usuario.setRole(UsuarioRole.USER);
+        usuarioService.salvarUsuario(usuario);
+        redirectAttributes.addFlashAttribute(
+            "sucesso",
+            "Conta criada com sucesso! Faça login."
+            );
+        return "redirect:/login";
+      } catch(IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        return "redirect:/registrar";
+      }
     }
 
     @GetMapping("/login")
