@@ -37,6 +37,11 @@ public class HomeController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @GetMapping("/registrar")
+    public String registrar() {
+        return "registrar";
+    }
+
     @GetMapping("/login")
     public String login() {
         return "login";
