@@ -1,8 +1,8 @@
 package com.umc.pediupatrao.entity;
 
 public enum UsuarioRole {
-    USER("USER"),
-    MANAGER("MANAGER"),
+    ATENDENTE("ATENDENTE"),
+    GERENTE("GERENTE"),
     ADMIN("ADMIN");
 
     private String name;

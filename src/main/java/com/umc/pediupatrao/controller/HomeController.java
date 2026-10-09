@@ -38,30 +38,6 @@ public class HomeController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @GetMapping("/registrar")
-    public String registrar() {
-        return "registrar";
-    }
-
-    @PostMapping("/registrar")
-    public String registrarUsuario(
-        @ModelAttribute Usuario usuario,
-        RedirectAttributes redirectAttributes
-    ) {
-      try {
-        usuario.setRole(UsuarioRole.USER);
-        usuarioService.salvarUsuario(usuario);
-        redirectAttributes.addFlashAttribute(
-            "sucesso",
-            "Conta criada com sucesso! Faça login."
-            );
-        return "redirect:/login";
-      } catch(IllegalArgumentException e) {
-        redirectAttributes.addFlashAttribute("erro", e.getMessage());
-        return "redirect:/registrar";
-      }
-    }
-
     @GetMapping("/login")
     public String login() {
         return "login";
