@@ -45,19 +45,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Desativa CSRF para REST APIs
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/registrar", "/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/usuarios/**").hasRole("ADMIN")
                         .requestMatchers("/produtos/**").hasRole("ADMIN")
                         .requestMatchers("/auditoria", "/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
                         .requestMatchers("/api/auditorias/**").hasRole("ADMIN")
                         .requestMatchers("/api/produtos/**").hasRole("ADMIN")
+                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers("/clientes/novo", "/clientes/editar/**", "/clientes/salvar").hasRole("ATENDENTE")
                         .requestMatchers("/clientes/**").hasAnyRole("GERENTE", "ATENDENTE")
                         .requestMatchers(HttpMethod.GET, "/api/clientes/**").hasAnyRole("GERENTE", "ATENDENTE")
                         .requestMatchers("/api/clientes/**").hasRole("ATENDENTE")
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/", "/pedidos/**", "/funcionarios/**", "/entregadores/**", "/horarios/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                 ).exceptionHandling(exception -> exception
@@ -81,7 +82,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
-            response.sendRedirect("/"); // Redireciona para a página inicial após login bem-sucedido
+            response.sendRedirect("/");
         };
     }
 }

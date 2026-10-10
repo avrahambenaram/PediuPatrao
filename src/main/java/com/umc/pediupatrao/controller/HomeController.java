@@ -408,11 +408,6 @@ public class HomeController {
         return "layout";
     }
 
-    @GetMapping("/teste")
-    public String teste() {
-        return "teste";
-    }
-
     @GetMapping("/admin")
     public String admin() {
         return "admin";

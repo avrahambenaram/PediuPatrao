@@ -32,11 +32,10 @@ public class UsuarioService {
     @Auditavel(tipo = AcaoAuditoria.CRIACAO, acao = "CRIAR_USUARIO",
             descricao = "Cadastro de usuário", entidade = "usuarios")
     public void salvarUsuario(Usuario usuario) {
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword())); // Criptografa a senha
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         usuarioRepository.save(usuario);
     }
 
-    // Deleta um usuário pelo ID
     @Auditavel(tipo = AcaoAuditoria.EXCLUSAO, acao = "DELETAR_USUARIO",
             descricao = "Exclusão de usuário", entidade = "usuarios", registrarArgumentos = true)
     public void deletarUsuario(String id) {
@@ -47,7 +46,6 @@ public class UsuarioService {
         return usuarioRepository.findAll(Paginacao.criar(pagina, tamanho, "username", Sort.Direction.ASC));
     }
 
-    // Atualiza o usuário usuários
     @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "ATUALIZAR_USUARIO",
             descricao = "Atualização de usuário", entidade = "usuarios")
     public void atualizarUsuario(String id, Usuario usuarioAtualizado) {

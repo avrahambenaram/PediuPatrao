@@ -1,5 +1,7 @@
 package com.umc.pediupatrao.config;
 
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -10,27 +12,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MongoInitConfig implements CommandLineRunner {
 
+    private static final List<String> COLECOES = List.of(
+            "pedidos", "clientes", "usuarios", "produtos", "horariosAtendimento", "auditorias");
+
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public void run(String... args) throws Exception {
-        if (!mongoTemplate.collectionExists("pedidos")) {
-            mongoTemplate.createCollection("pedidos");
-        }
-        if (!mongoTemplate.collectionExists("clientes")) {
-            mongoTemplate.createCollection("clientes");
-        }
-        if (!mongoTemplate.collectionExists("usuarios")) {
-            mongoTemplate.createCollection("usuarios");
-        }
-        if (!mongoTemplate.collectionExists("produtos")) {
-            mongoTemplate.createCollection("produtos");
-        }
-        if (!mongoTemplate.collectionExists("horariosAtendimento")) {
-            mongoTemplate.createCollection("horariosAtendimento");
-        }
-        if (!mongoTemplate.collectionExists("auditorias")) {
-            mongoTemplate.createCollection("auditorias");
+    public void run(String... args) {
+        for (String colecao : COLECOES) {
+            if (!mongoTemplate.collectionExists(colecao)) {
+                mongoTemplate.createCollection(colecao);
+            }
         }
     }
 }

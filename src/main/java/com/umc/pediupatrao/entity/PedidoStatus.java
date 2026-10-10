@@ -50,7 +50,7 @@ public enum PedidoStatus {
         return antesDaSaida();
     }
 
-    public boolean antesDaSaida() {
+    private boolean antesDaSaida() {
         return ANTES_DA_SAIDA.contains(this);
     }
 

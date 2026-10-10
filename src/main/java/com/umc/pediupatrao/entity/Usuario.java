@@ -3,13 +3,16 @@ package com.umc.pediupatrao.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "usuarios") // Define a coleção no MongoDB
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@Document(collection = "usuarios")
 public class Usuario {
     @Id
     private String id;
-    private String username; // Nome de usuário para login
+    private String username;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // Senha criptografada
-    private UsuarioRole role;     // Papel do usuário, como ADMIN ou USER
+    private UsuarioRole role;
 
     public String getId() {
         return id;
@@ -42,6 +45,6 @@ public class Usuario {
     public void setRole(UsuarioRole role) {
         this.role = role;
     }
-    
-    
+
+
 }

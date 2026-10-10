@@ -16,7 +16,6 @@
         </a>
     </div>
 
-    <!-- Mensagens de feedback -->
     <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${sucesso}"></span>
@@ -28,7 +27,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Listagem de Produtos -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -44,14 +42,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Lista vazia -->
                         <tr th:if="${#lists.isEmpty(produtos)}">
                             <td colspan="6" class="text-center text-muted py-5">
                                 <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                 Nenhum produto cadastrado.
                             </td>
                         </tr>
-                        <!-- Linhas -->
                         <tr th:each="produto : ${produtos}">
                             <td class="ps-4 text-muted" th:text="${produto.id}"></td>
                             <td th:text="${produto.nome}"></td>

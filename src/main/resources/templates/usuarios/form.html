@@ -25,7 +25,6 @@
                   th:object="${usuario}"
                   method="post">
 
-                <!-- Username -->
                 <div class="mb-3">
                     <label for="username" class="form-label fw-medium">
                         <i class="bi bi-person me-1"></i>Username
@@ -38,7 +37,6 @@
                            required/>
                 </div>
 
-                <!-- Senha -->
                 <div class="mb-3">
                     <label for="password" class="form-label fw-medium">
                         <i class="bi bi-lock me-1"></i>Senha
@@ -59,7 +57,6 @@
                     </div>
                 </div>
 
-                <!-- Role -->
                 <div class="mb-4">
                     <label for="role" class="form-label fw-medium">
                         <i class="bi bi-shield me-1"></i>Perfil
@@ -72,7 +69,6 @@
                     </select>
                 </div>
 
-                <!-- Botões -->
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg me-1"></i>
@@ -86,7 +82,6 @@
     </div>
 
     <script>
-        // Toggle mostrar/ocultar senha
         document.getElementById('togglePassword').addEventListener('click', function () {
             const input = document.getElementById('password');
             const icon  = document.getElementById('eyeIcon');

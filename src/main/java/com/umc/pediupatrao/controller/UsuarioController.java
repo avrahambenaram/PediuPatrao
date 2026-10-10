@@ -25,38 +25,26 @@ public class UsuarioController {
         return PaginaResponse.de(usuarioService.listarPaginado(pagina, tamanho));
     }
 
-    // Endpoint para buscar um usuário por ID
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscarPorId(@PathVariable String id) {
         Optional<Usuario> usuario = usuarioService.buscarPorId(id);
         return usuario.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // Endpoint para criar um novo usuário
     @PostMapping
     public ResponseEntity<Usuario> criarUsuario(@RequestBody Usuario usuario) {
         usuarioService.salvarUsuario(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
     }
 
-    // Endpoint para atualizar um usuário
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> atualizarUsuario(@PathVariable String id, @RequestBody Usuario usuarioAtualizado) {
-        Optional<Usuario> usuarioExistente = usuarioService.buscarPorId(id);
-
-        if (usuarioExistente.isPresent()) {
-            Usuario usuario = usuarioExistente.get();
-            usuario.setUsername(usuarioAtualizado.getUsername());
-            usuario.setPassword(usuarioAtualizado.getPassword());
-            usuarioService.salvarUsuario(usuario);
-
-            return ResponseEntity.ok(usuario);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        usuarioService.atualizarUsuario(id, usuarioAtualizado);
+        return usuarioService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // Endpoint para deletar um usuário
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarUsuario(@PathVariable String id) {
         Optional<Usuario> usuarioExistente = usuarioService.buscarPorId(id);

@@ -50,21 +50,14 @@ public class ProdutoService {
         produtoRepository.deleteById(id);
     }
 
-
     @Auditavel(acao = "SALVAR_PRODUTO",
             descricao = "Cadastro ou atualização de produto", entidade = "produtos")
     public Produto salvar(Produto produto) {
         exigirAdministrador();
-        if (produto.getId() == null) {
-            return produtoRepository.save(produto);  // Cria um novo produto
-        } 
-        else {
-            if (produtoRepository.existsById(produto.getId())) {
-                return produtoRepository.save(produto);
-            } else {
-                throw new IllegalArgumentException("Produto não encontrado para atualização.");
-            }
+        if (produto.getId() != null && !produtoRepository.existsById(produto.getId())) {
+            throw new IllegalArgumentException("Produto não encontrado para atualização.");
         }
+        return produtoRepository.save(produto);
     }
 
     private void exigirAdministrador() {

@@ -25,7 +25,6 @@
                   th:object="${produto}"
                   method="post">
 
-                <!-- Nome -->
                 <div class="mb-3">
                     <label for="nome" class="form-label fw-medium">
                         <i class="bi bi-tag me-1"></i>Nome
@@ -34,7 +33,6 @@
                            placeholder="Nome do produto" required>
                 </div>
 
-                <!-- Tipo -->
                 <div class="mb-3">
                     <label for="tipo" class="form-label fw-medium">
                         <i class="bi bi-grid me-1"></i>Tipo
@@ -49,7 +47,6 @@
                     </select>
                 </div>
 
-                <!-- Preço -->
                 <div class="mb-3">
                     <label for="preco" class="form-label fw-medium">
                         <i class="bi bi-currency-dollar me-1"></i>Preço (R$)
@@ -58,7 +55,6 @@
                            step="0.01" min="0" placeholder="0,00" required>
                 </div>
 
-                <!-- Ativo -->
                 <div class="form-check mb-4">
                     <input type="checkbox" id="ativo" class="form-check-input" th:field="*{ativo}">
                     <label for="ativo" class="form-check-label">Produto ativo</label>

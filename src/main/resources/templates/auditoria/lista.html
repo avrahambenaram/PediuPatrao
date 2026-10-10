@@ -35,14 +35,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Lista vazia -->
                         <tr th:if="${#lists.isEmpty(auditorias)}">
                             <td colspan="10" class="text-center text-muted py-5">
                                 <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                 Nenhum registro de auditoria encontrado.
                             </td>
                         </tr>
-                        <!-- Linhas -->
                         <tr th:each="registro : ${auditorias}">
                             <td class="ps-3 text-nowrap"
                                 th:text="${registro.dataHora != null
@@ -99,7 +97,6 @@
             </div>
         </div>
 
-        <!-- Rodapé com paginação -->
         <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2"
              th:if="${totalPaginas > 1}">
             <small class="text-muted">

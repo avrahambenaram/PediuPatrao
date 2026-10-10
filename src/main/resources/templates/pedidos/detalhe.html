@@ -17,7 +17,6 @@
         </h2>
     </div>
 
-    <!-- Mensagens de feedback -->
     <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${sucesso}"></span>
@@ -31,7 +30,6 @@
 
     <div class="row g-3">
 
-        <!-- Itens e valores -->
         <div class="col-lg-7">
             <div class="card shadow-sm">
                 <div class="card-header fw-medium">
@@ -80,7 +78,6 @@
             </div>
         </div>
 
-        <!-- Dados e ações -->
         <div class="col-lg-5">
 
             <div class="card shadow-sm mb-3">
@@ -133,7 +130,6 @@
 
             <th:block th:unless="${statusAtual.final}">
 
-                <!-- Atualizar status -->
                 <div class="card shadow-sm mb-3" th:if="${podeRegistrar}">
                     <div class="card-header fw-medium">
                         <i class="bi bi-arrow-repeat me-1"></i>Atualizar status

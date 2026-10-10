@@ -50,16 +50,10 @@ public class ClienteService {
             descricao = "Cadastro ou atualização de cliente", entidade = "clientes")
     public Cliente salvar(Cliente cliente) {
         exigirAtendente();
-        if (cliente.getId() == null) {
-            return clienteRepository.save(cliente);  // Cria um novo cliente
+        if (cliente.getId() != null && !clienteRepository.existsById(cliente.getId())) {
+            throw new IllegalArgumentException("Cliente não encontrado para atualização.");
         }
-        else {
-            if (clienteRepository.existsById(cliente.getId())) {
-                return clienteRepository.save(cliente);
-            } else {
-                throw new IllegalArgumentException("Cliente não encontrado para atualização.");
-            }
-        }
+        return clienteRepository.save(cliente);
     }
 
     private void exigirAtendente() {

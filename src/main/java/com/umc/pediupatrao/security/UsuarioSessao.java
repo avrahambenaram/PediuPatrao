@@ -22,7 +22,7 @@ public final class UsuarioSessao {
         if (autenticacao == null) {
             return false;
         }
-        String alvo = "ROLE_" + perfil.getName();
+        String alvo = "ROLE_" + perfil.name();
         return autenticacao.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(alvo::equalsIgnoreCase);

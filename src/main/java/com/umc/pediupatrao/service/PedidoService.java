@@ -20,6 +20,7 @@ import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.PedidoStatus;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.UsuarioRole;
+import com.umc.pediupatrao.repository.ClienteRepository;
 import com.umc.pediupatrao.repository.PedidoRepository;
 import com.umc.pediupatrao.repository.ProdutoRepository;
 import com.umc.pediupatrao.security.UsuarioSessao;
@@ -37,6 +38,7 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
+    private final ClienteRepository clienteRepository;
 
     @Auditavel(tipo = AcaoAuditoria.CRIACAO, acao = "CRIAR_PEDIDO",
             descricao = "Criação de pedido", entidade = "pedidos")
@@ -48,12 +50,18 @@ public class PedidoService {
         if (request.getClienteId() == null || request.getClienteId().isBlank()) {
             throw new IllegalArgumentException("O pedido deve informar o cliente.");
         }
+        if (!clienteRepository.existsById(request.getClienteId())) {
+            throw new IllegalArgumentException("Cliente não encontrado.");
+        }
 
         float descontoPercentual = validarDesconto(request.getDescontoPercentual());
 
         List<ItemPedido> itens = new ArrayList<>();
         float subtotal = 0f;
         for (ItemPedidoRequest item : request.getItens()) {
+            if (item == null || item.getProdutoId() == null || item.getProdutoId().isBlank()) {
+                throw new IllegalArgumentException("Item do pedido inválido: o produto deve ser informado.");
+            }
             Produto produto = produtoRepository.findById(item.getProdutoId())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Produto não encontrado: " + item.getProdutoId()));

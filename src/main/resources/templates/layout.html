@@ -14,12 +14,10 @@
             <span>&#9776;</span>
         </div>
 
-        <!-- Sidebar incluído como fragmento -->
         <aside>
             <div th:replace="~{fragments/sidebar :: sidebar}"></div>
         </aside>
 
-        <!-- Conteúdo Principal -->
         <main class="container-fluid mt-4">
             <div th:replace="~{__${content}__}"></div>
         </main>
