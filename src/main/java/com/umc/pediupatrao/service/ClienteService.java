@@ -1,5 +1,7 @@
 package com.umc.pediupatrao.service;
 
+import com.umc.pediupatrao.audit.Auditavel;
+import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,8 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
-    // Método para excluir cliente
+    @Auditavel(tipo = AcaoAuditoria.EXCLUSAO, acao = "EXCLUIR_CLIENTE",
+            descricao = "Exclusão de cliente", entidade = "clientes", registrarArgumentos = true)
     public void excluir(String id) {
         clienteRepository.deleteById(id);
     }
@@ -30,16 +33,15 @@ public class ClienteService {
         return clienteRepository.findById(id);
     }
 
-    // Método para salvar um novo cliente ou atualizar um cliente existente
+    @Auditavel(acao = "SALVAR_CLIENTE",
+            descricao = "Cadastro ou atualização de cliente", entidade = "clientes")
     public Cliente salvar(Cliente cliente) {
-        // Se o cliente não tem ID (novo cliente), salva como novo
         if (cliente.getId() == null) {
             return clienteRepository.save(cliente);  // Cria um novo cliente
-        } // Se já tem ID (cliente existente), atualiza
+        }
         else {
-            // Verifica se o cliente existe antes de atualizar
             if (clienteRepository.existsById(cliente.getId())) {
-                return clienteRepository.save(cliente);  // Atualiza o cliente existente
+                return clienteRepository.save(cliente);
             } else {
                 throw new IllegalArgumentException("Cliente não encontrado para atualização.");
             }
