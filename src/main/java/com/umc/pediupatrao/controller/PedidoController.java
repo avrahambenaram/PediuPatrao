@@ -1,9 +1,11 @@
 package com.umc.pediupatrao.controller;
 
+import org.springframework.web.bind.annotation.*;
+
 import com.umc.pediupatrao.dto.PaginaResponse;
+import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.service.PedidoService;
-import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,8 +17,8 @@ public class PedidoController {
     private final PedidoService pedidoService;
 
     @PostMapping
-    public Pedido criarPedido(@RequestBody Pedido pedido) {
-        return pedidoService.criarPedido(pedido);
+    public Pedido criarPedido(@RequestBody PedidoRequest request) {
+        return pedidoService.criarPedido(request);
     }
 
     @GetMapping
@@ -30,6 +32,9 @@ public class PedidoController {
     public Pedido atualizarStatus(@PathVariable String id, @RequestParam String status) {
         return pedidoService.atualizarStatus(id, status);
     }
-    
-    
+
+    @PutMapping("/{id}/cancelar")
+    public Pedido cancelarPedido(@PathVariable String id) {
+        return pedidoService.cancelar(id);
+    }
 }

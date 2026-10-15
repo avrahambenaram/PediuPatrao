@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auditorias/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                         .requestMatchers("/", "/clientes/**", "/pedidos/**", "/funcionarios/**", "/entregadores/**", "/horarios/**", "/produtos/**").authenticated()
+                        .requestMatchers("/api/**").authenticated()
                 ).exceptionHandling(exception -> exception
                   .accessDeniedHandler((request, response, ex) ->
                     response.sendRedirect("/")

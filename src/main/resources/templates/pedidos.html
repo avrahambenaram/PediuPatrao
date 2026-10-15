@@ -33,16 +33,18 @@
                     <tr>
                         <th class="ps-4">ID</th>
                         <th>Cliente ID</th>
-                        <th>Tipo de Pizza</th>
-                        <th>Sabor</th>
-                        <th>Quantidade</th>
-                        <th>Status</th>
+                        <th>Itens</th>
+                        <th>Desconto</th>
+                        <th>Total</th>
+                        <th>Responsável</th>
+                        <th>Entrada</th>
+                        <th class="pe-4">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- Lista vazia -->
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="8" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             Nenhum pedido encontrado.
                         </td>
@@ -51,10 +53,31 @@
                     <tr th:each="pedido : ${pedidos}">
                         <td class="ps-4 text-muted" th:text="${pedido.id}"></td>
                         <td th:text="${pedido.clienteId}"></td>
-                        <td th:text="${pedido.tipoPizza}"></td>
-                        <td th:text="${pedido.sabor}"></td>
-                        <td th:text="${pedido.quantidade}"></td>
                         <td>
+                            <ul class="list-unstyled mb-0 small" th:if="${not #lists.isEmpty(pedido.itens)}">
+                                <li th:each="item : ${pedido.itens}">
+                                    <span th:text="${item.nome}">Produto</span>
+                                    <span class="text-muted"
+                                          th:text="${' x' + item.quantidade + ' — R$ ' + #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </li>
+                            </ul>
+                            <span class="text-muted small" th:if="${#lists.isEmpty(pedido.itens)}">—</span>
+                        </td>
+                        <td>
+                            <th:block th:if="${pedido.descontoPercentual > 0}">
+                                <span class="badge bg-info text-dark"
+                                      th:text="${#numbers.formatDecimal(pedido.descontoPercentual, 1, 'POINT', 2, 'COMMA') + '%'}">0%</span>
+                                <div class="small text-muted"
+                                     th:text="${'-R$ ' + #numbers.formatDecimal(pedido.valorDesconto, 1, 'POINT', 2, 'COMMA')}"></div>
+                            </th:block>
+                            <span class="text-muted" th:if="${pedido.descontoPercentual <= 0}">—</span>
+                        </td>
+                        <td class="fw-semibold"
+                            th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                        <td th:text="${pedido.registradoPor != null ? pedido.registradoPor : '—'}"></td>
+                        <td class="text-muted small"
+                            th:text="${pedido.dataHora != null ? #temporals.format(pedido.dataHora, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+                        <td class="pe-4">
                             <span class="badge"
                                   th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
                                                   (${pedido.status == 'CANCELADO'} ? 'bg-danger' :

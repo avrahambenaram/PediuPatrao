@@ -2,13 +2,13 @@ package com.umc.pediupatrao.audit;
 
 import java.util.stream.Collectors;
 
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.umc.pediupatrao.security.UsuarioSessao;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -18,12 +18,11 @@ public final class ContextoAuditoria {
     }
 
     public static String usuarioAtual() {
-        Authentication autenticacao = autenticacaoAtual();
-        return autenticacao == null ? null : autenticacao.getName();
+        return UsuarioSessao.username();
     }
 
     public static String perfilAtual() {
-        Authentication autenticacao = autenticacaoAtual();
+        Authentication autenticacao = UsuarioSessao.autenticacaoAtual();
         if (autenticacao == null) {
             return null;
         }
@@ -43,14 +42,5 @@ public final class ContextoAuditoria {
             return requisicao.getRemoteAddr();
         }
         return null;
-    }
-
-    private static Authentication autenticacaoAtual() {
-        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
-        if (autenticacao == null || !autenticacao.isAuthenticated()
-                || autenticacao instanceof AnonymousAuthenticationToken) {
-            return null;
-        }
-        return autenticacao;
     }
 }
