@@ -2,23 +2,26 @@ package com.umc.pediupatrao.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.umc.pediupatrao.entity.Auditoria;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
-import com.umc.pediupatrao.entity.UsuarioRole;
+import com.umc.pediupatrao.service.AuditoriaService;
 import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -37,6 +40,9 @@ public class HomeController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private AuditoriaService auditoriaService;
 
     @GetMapping("/login")
     public String login() {
@@ -189,6 +195,20 @@ public class HomeController {
     }
 
     // ========================
+    // AUDITORIA
+    // ========================
+    @GetMapping("/auditoria")
+    public String auditoria(Model model,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        Page<Auditoria> resultados = auditoriaService.listarPaginado(pagina, tamanho);
+        preencherPaginacao(model, resultados);
+        model.addAttribute("auditorias", resultados.getContent());
+        model.addAttribute("content", "auditoria/lista :: content");
+        return "layout";
+    }
+
+    // ========================
     // OUTRAS ROTAS
     // ========================
     @GetMapping("/configuracoes")
@@ -205,5 +225,30 @@ public class HomeController {
     @GetMapping("/admin")
     public String admin() {
         return "admin";
+    }
+
+    private void preencherPaginacao(Model model, Page<?> pagina) {
+        int atual = pagina.getNumber();
+        int total = pagina.getTotalPages();
+
+        int janela = 5;
+        int inicio = Math.max(0, atual - janela / 2);
+        int fim = Math.min(Math.max(total - 1, 0), inicio + janela - 1);
+        inicio = Math.max(0, fim - janela + 1);
+
+        long registroInicial = pagina.getTotalElements() == 0
+                ? 0
+                : (long) pagina.getNumber() * pagina.getSize() + 1;
+        long registroFinal = Math.min((long) (pagina.getNumber() + 1) * pagina.getSize(),
+                pagina.getTotalElements());
+
+        model.addAttribute("paginaAtual", atual);
+        model.addAttribute("totalPaginas", total);
+        model.addAttribute("totalElementos", pagina.getTotalElements());
+        model.addAttribute("tamanho", pagina.getSize());
+        model.addAttribute("paginaInicial", inicio);
+        model.addAttribute("paginaFinal", fim);
+        model.addAttribute("registroInicial", registroInicial);
+        model.addAttribute("registroFinal", registroFinal);
     }
 }
