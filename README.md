@@ -11,7 +11,7 @@ Sistema web para gerenciamento de pedidos de uma pizzaria, desenvolvido com Java
 - **Spring Data MongoDB** e **MongoDB** — persistência dos dados.
 - **Thymeleaf** — renderização das páginas HTML no servidor.
 - **Thymeleaf Layout Dialect** — composição e reutilização de layouts.
-- **Tailwind CSS** e **Bootstrap** — estilização e componentes de interface.
+- **Bootstrap** — estilização e componentes de interface.
 - **Lombok** — redução de código repetitivo.
 - **Maven Wrapper** — execução do Maven sem instalação global do Maven.
 
