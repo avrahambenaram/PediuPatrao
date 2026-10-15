@@ -4,15 +4,18 @@ import com.umc.pediupatrao.audit.Auditavel;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.repository.PedidoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.umc.pediupatrao.util.Paginacao;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class PedidoService {
 
-    @Autowired
-    private PedidoRepository pedidoRepository;
+    private final PedidoRepository pedidoRepository;
 
     @Auditavel(tipo = AcaoAuditoria.CRIACAO, acao = "CRIAR_PEDIDO",
             descricao = "Criação de pedido", entidade = "pedidos")
@@ -20,8 +23,8 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
-    public List<Pedido> listarPedidos() {
-        return pedidoRepository.findAll();
+    public Page<Pedido> listarPaginado(int pagina, int tamanho) {
+        return pedidoRepository.findAll(Paginacao.criar(pagina, tamanho, "_id", Sort.Direction.ASC));
     }
 
     @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "ATUALIZAR_STATUS_PEDIDO",

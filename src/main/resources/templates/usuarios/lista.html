@@ -50,7 +50,7 @@
                     </tr>
                     <!-- Linhas -->
                     <tr th:each="usuario, stat : ${usuarios}">
-                        <td class="ps-4 text-muted" th:text="${stat.index + 1}"></td>
+                        <td class="ps-4 text-muted" th:text="${registroInicial + stat.index}"></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="avatar-circle">
@@ -82,8 +82,38 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(usuarios)}">
-            Total: <strong th:text="${#lists.size(usuarios)}"></strong> usuário(s)
+        <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2"
+             th:if="${totalElementos > 0}">
+            <small class="text-muted">
+                Mostrando
+                <strong th:text="${registroInicial}">0</strong>–<strong th:text="${registroFinal}">0</strong>
+                de <strong th:text="${totalElementos}">0</strong>
+            </small>
+            <nav aria-label="Paginação de usuários" th:if="${totalPaginas > 1}">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${paginaAtual == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="@{/usuarios(pagina=${paginaAtual - 1}, tamanho=${tamanho})}"
+                           aria-label="Anterior">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item"
+                        th:each="p : ${#numbers.sequence(paginaInicial, paginaFinal)}"
+                        th:classappend="${p == paginaAtual ? 'active' : ''}">
+                        <a class="page-link"
+                           th:href="@{/usuarios(pagina=${p}, tamanho=${tamanho})}"
+                           th:text="${p + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:classappend="${paginaAtual >= totalPaginas - 1 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="@{/usuarios(pagina=${paginaAtual + 1}, tamanho=${tamanho})}"
+                           aria-label="Próxima">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 

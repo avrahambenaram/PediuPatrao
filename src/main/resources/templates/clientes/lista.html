@@ -31,11 +31,16 @@
                 </tbody>
             </table>
         </div>
+        <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2 d-none"
+             id="clientes-paginacao"></div>
     </div>
 
     <script>
         const API_URL = '/api/clientes';
+        const TAMANHO = 20;
         const tabelaClientes = document.getElementById('clientes-tabela');
+        const paginacaoClientes = document.getElementById('clientes-paginacao');
+        let paginaAtual = 0;
 
         function formatarEndereco(cliente) {
             const partes = [
@@ -50,12 +55,19 @@
             return partes.length > 0 ? partes.join(', ') : (cliente.endereco || '—');
         }
 
-        async function carregarClientes() {
-            const response = await fetch(API_URL);
-            const clientes = await response.json();
+        async function carregarClientes(pagina = 0) {
+            const response = await fetch(`${API_URL}?pagina=${pagina}&tamanho=${TAMANHO}`);
+            const data = await response.json();
+
+            if (data.conteudo.length === 0 && data.pagina > 0) {
+                carregarClientes(data.pagina - 1);
+                return;
+            }
+
+            paginaAtual = data.pagina;
             tabelaClientes.innerHTML = '';
 
-            if (clientes.length === 0) {
+            if (data.conteudo.length === 0) {
                 tabelaClientes.innerHTML = `
                     <tr>
                         <td colspan="4" class="text-center text-muted py-5">
@@ -63,10 +75,12 @@
                             Nenhum cliente cadastrado.
                         </td>
                     </tr>`;
+                paginacaoClientes.innerHTML = '';
+                paginacaoClientes.classList.add('d-none');
                 return;
             }
 
-            clientes.forEach(cliente => {
+            data.conteudo.forEach(cliente => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${cliente.nome || '—'}</td>
@@ -83,6 +97,64 @@
                 `;
                 tabelaClientes.appendChild(row);
             });
+
+            renderizarPaginacao(data);
+        }
+
+        function renderizarPaginacao(data) {
+            paginacaoClientes.classList.remove('d-none');
+
+            const primeiro = data.pagina * data.tamanho + 1;
+            const ultimo = Math.min((data.pagina + 1) * data.tamanho, data.totalElementos);
+
+            let itens = '';
+            if (data.totalPaginas > 1) {
+                const janela = 5;
+                let inicio = Math.max(0, paginaAtual - Math.floor(janela / 2));
+                let fim = Math.min(data.totalPaginas - 1, inicio + janela - 1);
+                inicio = Math.max(0, fim - janela + 1);
+
+                itens += `
+                    <li class="page-item ${paginaAtual === 0 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-pagina="${paginaAtual - 1}" aria-label="Anterior">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>`;
+
+                for (let p = inicio; p <= fim; p++) {
+                    itens += `
+                        <li class="page-item ${p === paginaAtual ? 'active' : ''}">
+                            <a class="page-link" href="#" data-pagina="${p}">${p + 1}</a>
+                        </li>`;
+                }
+
+                itens += `
+                    <li class="page-item ${paginaAtual >= data.totalPaginas - 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-pagina="${paginaAtual + 1}" aria-label="Próxima">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>`;
+            }
+
+            paginacaoClientes.innerHTML = `
+                <small class="text-muted">
+                    Mostrando <strong>${primeiro}</strong>–<strong>${ultimo}</strong>
+                    de <strong>${data.totalElementos}</strong>
+                </small>
+                <nav aria-label="Paginação de clientes">
+                    <ul class="pagination pagination-sm mb-0">${itens}</ul>
+                </nav>`;
+
+            paginacaoClientes.querySelectorAll('a[data-pagina]').forEach(link => {
+                link.addEventListener('click', evento => {
+                    evento.preventDefault();
+                    const destino = parseInt(link.dataset.pagina, 10);
+                    if (destino < 0 || destino > data.totalPaginas - 1) {
+                        return;
+                    }
+                    carregarClientes(destino);
+                });
+            });
         }
 
         async function excluirCliente(id) {
@@ -90,7 +162,7 @@
                 const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
                 if (response.ok) {
                     alert('Cliente excluído com sucesso!');
-                    carregarClientes();
+                    carregarClientes(paginaAtual);
                 } else {
                     alert('Erro ao excluir o cliente.');
                 }

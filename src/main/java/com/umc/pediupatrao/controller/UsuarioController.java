@@ -1,5 +1,6 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.PaginaResponse;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.service.UsuarioService;
 import org.springframework.http.HttpStatus;
@@ -8,21 +9,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
-    }
-
-    // Endpoint para listar todos os usuários
     @GetMapping
-    public ResponseEntity<Iterable<Usuario>> listarTodos() {
-        Iterable<Usuario> usuarios = usuarioService.listarTodos();
-        return ResponseEntity.ok(usuarios);
+    public PaginaResponse<Usuario> listar(
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        return PaginaResponse.de(usuarioService.listarPaginado(pagina, tamanho));
     }
 
     // Endpoint para buscar um usuário por ID

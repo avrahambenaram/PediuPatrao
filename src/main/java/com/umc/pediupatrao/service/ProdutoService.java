@@ -4,15 +4,18 @@ import com.umc.pediupatrao.audit.Auditavel;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.repository.ProdutoRepository;
+import com.umc.pediupatrao.util.Paginacao;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ProdutoService {
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
+    private final ProdutoRepository produtoRepository;
 
     @Auditavel(tipo = AcaoAuditoria.CRIACAO, acao = "CRIAR_PRODUTO",
             descricao = "Cadastro de produto", entidade = "produtos")
@@ -20,8 +23,8 @@ public class ProdutoService {
         return produtoRepository.save(produto);
     }
 
-    public List<Produto> listarProdutos() {
-        return produtoRepository.findAll();
+    public Page<Produto> listarPaginado(int pagina, int tamanho) {
+        return produtoRepository.findAll(Paginacao.criar(pagina, tamanho, "nome", Sort.Direction.ASC));
     }
 
     @Auditavel(tipo = AcaoAuditoria.EXCLUSAO, acao = "EXCLUIR_PRODUTO",

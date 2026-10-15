@@ -10,15 +10,14 @@ import com.umc.pediupatrao.dto.PaginaResponse;
 import com.umc.pediupatrao.entity.Auditoria;
 import com.umc.pediupatrao.service.AuditoriaService;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/auditorias")
+@RequiredArgsConstructor
 public class AuditoriaController {
 
     private final AuditoriaService auditoriaService;
-
-    public AuditoriaController(AuditoriaService auditoriaService) {
-        this.auditoriaService = auditoriaService;
-    }
 
     @GetMapping
     public PaginaResponse<Auditoria> listar(

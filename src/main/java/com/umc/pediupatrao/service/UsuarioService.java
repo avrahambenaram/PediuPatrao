@@ -4,21 +4,22 @@ import com.umc.pediupatrao.audit.Auditavel;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.repository.UsuarioRepository;
+import com.umc.pediupatrao.util.Paginacao;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
-        this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     public Optional<Usuario> buscarPorId(String id) {
         return usuarioRepository.findById(id);
@@ -42,9 +43,8 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    // Lista todos os usuários
-    public Iterable<Usuario> listarTodos() {
-        return usuarioRepository.findAll();
+    public Page<Usuario> listarPaginado(int pagina, int tamanho) {
+        return usuarioRepository.findAll(Paginacao.criar(pagina, tamanho, "username", Sort.Direction.ASC));
     }
 
     // Atualiza o usuário usuários

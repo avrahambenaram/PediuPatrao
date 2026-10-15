@@ -1,23 +1,26 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.PaginaResponse;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.service.ClienteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/clientes")
+@RequiredArgsConstructor
 public class ClienteController {
 
-    @Autowired
-    private ClienteService clienteService;
+    private final ClienteService clienteService;
 
     @GetMapping
-    public List<Cliente> listarClientes() {
-        return clienteService.listarClientes();
+    public PaginaResponse<Cliente> listarClientes(
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        return PaginaResponse.de(clienteService.listarPaginado(pagina, tamanho));
     }
 
     @DeleteMapping("/{id}")

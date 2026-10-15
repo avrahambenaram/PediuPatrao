@@ -12,8 +12,6 @@ import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,25 +22,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
+@RequiredArgsConstructor
 public class HomeController {
 
     private static final Logger log = LoggerFactory.getLogger(HomeController.class);
 
-    @Autowired
-    private PedidoService pedidoService;
-
-    @Autowired
-    private ClienteService clienteService;
-
-    @Autowired
-    private ProdutoService produtoService;
-
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private AuditoriaService auditoriaService;
+    private final PedidoService pedidoService;
+    private final ClienteService clienteService;
+    private final ProdutoService produtoService;
+    private final UsuarioService usuarioService;
+    private final AuditoriaService auditoriaService;
 
     @GetMapping("/login")
     public String login() {
@@ -59,9 +51,12 @@ public class HomeController {
     // USUÁRIOS
     // ========================
     @GetMapping("/usuarios")
-    public String listarUsuarios(Model model) {
-        List<Usuario> usuarios = (List<Usuario>) usuarioService.listarTodos();
-        model.addAttribute("usuarios", usuarios);
+    public String listarUsuarios(Model model,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        Page<Usuario> resultados = usuarioService.listarPaginado(pagina, tamanho);
+        preencherPaginacao(model, resultados);
+        model.addAttribute("usuarios", resultados.getContent());
         model.addAttribute("content", "usuarios/lista :: content");
         log.info("Carregando fragmento: usuarios/lista :: content");
         return "layout";
@@ -120,9 +115,12 @@ public class HomeController {
     // PEDIDOS
     // ========================
     @GetMapping("/pedidos")
-    public String pedidos(Model model) {
-        List<Pedido> pedidos = pedidoService.listarPedidos();
-        model.addAttribute("pedidos", pedidos);
+    public String pedidos(Model model,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        Page<Pedido> resultados = pedidoService.listarPaginado(pagina, tamanho);
+        preencherPaginacao(model, resultados);
+        model.addAttribute("pedidos", resultados.getContent());
         model.addAttribute("content", "pedidos :: content");
         log.info("Carregando fragmento: pedidos :: content");
         return "layout";
@@ -132,9 +130,12 @@ public class HomeController {
     // PRODUTOS
     // ========================
     @GetMapping("/produtos")
-    public String produtos(Model model) {
-        List<Produto> produtos = produtoService.listarProdutos();
-        model.addAttribute("produtos", produtos);
+    public String produtos(Model model,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        Page<Produto> resultados = produtoService.listarPaginado(pagina, tamanho);
+        preencherPaginacao(model, resultados);
+        model.addAttribute("produtos", resultados.getContent());
         model.addAttribute("content", "produtos/lista :: content");
         log.info("Carregando fragmento: produtos/lista :: content");
         return "layout";
@@ -145,8 +146,6 @@ public class HomeController {
     // ========================
     @GetMapping("/clientes")
     public String clientes(Model model) {
-        List<Cliente> clientes = clienteService.listarClientes();
-        model.addAttribute("clientes", clientes);
         model.addAttribute("content", "clientes/lista :: content");
         log.info("Carregando fragmento: clientes/lista :: content");
         return "layout";

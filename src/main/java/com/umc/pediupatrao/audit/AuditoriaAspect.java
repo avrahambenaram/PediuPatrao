@@ -11,21 +11,14 @@ import org.springframework.stereotype.Component;
 import com.umc.pediupatrao.entity.Auditoria;
 import com.umc.pediupatrao.service.AuditoriaService;
 
-/**
- * Intercepta os métodos anotados com {@link Auditavel} e registra cada execução.
- *
- * <p>O registro é gravado tanto em caso de sucesso quanto de falha, sem
- * interferir no fluxo original: exceções da operação são repropagadas.</p>
- */
+import lombok.RequiredArgsConstructor;
+
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class AuditoriaAspect {
 
     private final AuditoriaService auditoriaService;
-
-    public AuditoriaAspect(AuditoriaService auditoriaService) {
-        this.auditoriaService = auditoriaService;
-    }
 
     @Around("@annotation(auditavel)")
     public Object auditar(ProceedingJoinPoint ponto, Auditavel auditavel) throws Throwable {

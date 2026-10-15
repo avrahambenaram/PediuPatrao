@@ -14,15 +14,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final UsuarioDetailsService usuarioDetailsService;
-
-    public SecurityConfig(UsuarioDetailsService usuarioDetailsService) {
-        this.usuarioDetailsService = usuarioDetailsService;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

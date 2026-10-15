@@ -4,23 +4,26 @@ import com.umc.pediupatrao.audit.Auditavel;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.repository.ClienteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.umc.pediupatrao.util.Paginacao;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ClienteService {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
 
     public Cliente novoCliente(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
 
-    public List<Cliente> listarClientes() {
-        return clienteRepository.findAll();
+    public Page<Cliente> listarPaginado(int pagina, int tamanho) {
+        return clienteRepository.findAll(Paginacao.criar(pagina, tamanho, "nome", Sort.Direction.ASC));
     }
 
     @Auditavel(tipo = AcaoAuditoria.EXCLUSAO, acao = "EXCLUIR_CLIENTE",

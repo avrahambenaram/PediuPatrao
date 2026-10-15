@@ -1,17 +1,18 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.PaginaResponse;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.service.PedidoService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/pedidos")
+@RequiredArgsConstructor
 public class PedidoController {
 
-    @Autowired
-    private PedidoService pedidoService;
+    private final PedidoService pedidoService;
 
     @PostMapping
     public Pedido criarPedido(@RequestBody Pedido pedido) {
@@ -19,8 +20,10 @@ public class PedidoController {
     }
 
     @GetMapping
-    public List<Pedido> listarPedidos() {
-        return pedidoService.listarPedidos();
+    public PaginaResponse<Pedido> listarPedidos(
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanho", defaultValue = "20") int tamanho) {
+        return PaginaResponse.de(pedidoService.listarPaginado(pagina, tamanho));
     }
 
     @PutMapping("/{id}/status")
