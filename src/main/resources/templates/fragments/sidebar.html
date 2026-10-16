@@ -60,7 +60,7 @@
                                 </a>
                             </li>
                             <li class="nav-item"
-                                sec:authorize="hasRole('ADMIN')">
+                                sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
                                 <a class="nav-link"
                                    th:href="@{/auditoria}">
                                     <i class="bi bi-clipboard-data"></i>
