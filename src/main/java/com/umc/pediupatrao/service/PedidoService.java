@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.umc.pediupatrao.audit.Auditavel;
+import com.umc.pediupatrao.audit.ContextoAuditoria;
 import com.umc.pediupatrao.dto.ItemPedidoRequest;
 import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
@@ -32,6 +33,7 @@ public class PedidoService {
 
     private static final String STATUS_INICIAL = PedidoStatus.RECEBIDO.name();
     private static final float PERCENTUAL_TOTAL = 100f;
+    private static final float PERCENTUAL_MAXIMO_DESCONTO = 20f;
 
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
@@ -92,7 +94,9 @@ public class PedidoService {
         pedido.setRegistradoPor(UsuarioSessao.username());
         pedido.setDataHora(Instant.now());
         pedido.setStatus(STATUS_INICIAL);
-        return pedidoRepository.save(pedido);
+        Pedido salvo = pedidoRepository.save(pedido);
+        ContextoAuditoria.registrarEstadoPosterior(descrever(salvo));
+        return salvo;
     }
 
     public Page<Pedido> listarPaginado(int pagina, int tamanho) {
@@ -122,12 +126,15 @@ public class PedidoService {
             throw new IllegalArgumentException("Transição inválida: de \"" + atual.getDescricao()
                     + "\" para \"" + destino.getDescricao() + "\".");
         }
+        ContextoAuditoria.registrarEstadoAnterior(descrever(pedido));
         if (destino.exigeSaida()) {
             pedido.setSaidaPor(UsuarioSessao.username());
             pedido.setDataHoraSaida(Instant.now());
         }
         pedido.setStatus(destino.name());
-        return pedidoRepository.save(pedido);
+        Pedido salvo = pedidoRepository.save(pedido);
+        ContextoAuditoria.registrarEstadoPosterior(descrever(salvo));
+        return salvo;
     }
 
     @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "CANCELAR_PEDIDO",
@@ -150,11 +157,14 @@ public class PedidoService {
             throw new IllegalArgumentException(
                     "O pedido não pode ser cancelado após sair para entrega ou retirada.");
         }
+        ContextoAuditoria.registrarEstadoAnterior(descrever(pedido));
         pedido.setStatus(PedidoStatus.CANCELADO.name());
         pedido.setCanceladoPor(UsuarioSessao.username());
         pedido.setDataHoraCancelamento(Instant.now());
         pedido.setJustificativaCancelamento(justificativa.trim());
-        return pedidoRepository.save(pedido);
+        Pedido salvo = pedidoRepository.save(pedido);
+        ContextoAuditoria.registrarEstadoPosterior(descrever(salvo));
+        return salvo;
     }
 
     @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "APLICAR_DESCONTO",
@@ -163,20 +173,24 @@ public class PedidoService {
         if (!UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE)) {
             throw new AccessDeniedException("Apenas o gerente pode aplicar descontos.");
         }
-        if (descontoPercentual < 0f || descontoPercentual > PERCENTUAL_TOTAL) {
-            throw new IllegalArgumentException("O desconto deve estar entre 0 e 100%.");
+        if (descontoPercentual < 0f || descontoPercentual > PERCENTUAL_MAXIMO_DESCONTO) {
+            throw new IllegalArgumentException(
+                    "O desconto deve estar entre 0 e " + (int) PERCENTUAL_MAXIMO_DESCONTO + "%.");
         }
         Pedido pedido = buscar(id);
         PedidoStatus atual = PedidoStatus.from(pedido.getStatus());
-        if (atual.isFinal()) {
-            throw new IllegalArgumentException("Não é possível aplicar desconto em pedido já "
-                    + atual.getDescricao().toLowerCase() + ".");
+        if (!atual.permiteDesconto()) {
+            throw new IllegalArgumentException(
+                    "O desconto só pode ser aplicado antes da saída para entrega ou retirada.");
         }
+        ContextoAuditoria.registrarEstadoAnterior(descrever(pedido));
         float valorDesconto = arredondar(pedido.getSubtotal() * descontoPercentual / PERCENTUAL_TOTAL);
         pedido.setDescontoPercentual(descontoPercentual);
         pedido.setValorDesconto(valorDesconto);
         pedido.setValorTotal(arredondar(pedido.getSubtotal() - valorDesconto));
-        return pedidoRepository.save(pedido);
+        Pedido salvo = pedidoRepository.save(pedido);
+        ContextoAuditoria.registrarEstadoPosterior(descrever(salvo));
+        return salvo;
     }
 
     private Pedido buscar(String id) {
@@ -193,13 +207,26 @@ public class PedidoService {
     }
 
     private float validarDesconto(float descontoPercentual) {
-        if (descontoPercentual < 0f || descontoPercentual > PERCENTUAL_TOTAL) {
-            throw new IllegalArgumentException("O desconto deve estar entre 0 e 100%.");
+        if (descontoPercentual < 0f || descontoPercentual > PERCENTUAL_MAXIMO_DESCONTO) {
+            throw new IllegalArgumentException(
+                    "O desconto deve estar entre 0 e " + (int) PERCENTUAL_MAXIMO_DESCONTO + "%.");
         }
         if (descontoPercentual > 0f && !UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE)) {
             throw new AccessDeniedException("Apenas o gerente pode aplicar descontos.");
         }
         return descontoPercentual;
+    }
+
+    private String descrever(Pedido pedido) {
+        return "status=" + pedido.getStatus()
+                + ", descontoPercentual=" + pedido.getDescontoPercentual()
+                + ", valorDesconto=" + pedido.getValorDesconto()
+                + ", valorTotal=" + pedido.getValorTotal()
+                + ", saidaPor=" + pedido.getSaidaPor()
+                + ", dataHoraSaida=" + pedido.getDataHoraSaida()
+                + ", canceladoPor=" + pedido.getCanceladoPor()
+                + ", dataHoraCancelamento=" + pedido.getDataHoraCancelamento()
+                + ", justificativaCancelamento=" + pedido.getJustificativaCancelamento();
     }
 
     private float arredondar(float valor) {

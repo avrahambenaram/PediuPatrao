@@ -22,7 +22,7 @@ public enum PedidoStatus {
             FINALIZADO, List.of(),
             CANCELADO, List.of());
 
-    private static final List<PedidoStatus> CANCELAVEIS = List.of(RECEBIDO, EM_PREPARACAO, PRONTO);
+    private static final List<PedidoStatus> ANTES_DA_SAIDA = List.of(RECEBIDO, EM_PREPARACAO, PRONTO);
 
     private final String descricao;
 
@@ -43,7 +43,15 @@ public enum PedidoStatus {
     }
 
     public boolean podeCancelar() {
-        return CANCELAVEIS.contains(this);
+        return antesDaSaida();
+    }
+
+    public boolean permiteDesconto() {
+        return antesDaSaida();
+    }
+
+    public boolean antesDaSaida() {
+        return ANTES_DA_SAIDA.contains(this);
     }
 
     public boolean isFinal() {

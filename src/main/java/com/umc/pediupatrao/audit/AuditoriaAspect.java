@@ -34,8 +34,11 @@ public class AuditoriaAspect {
             auditoria.setMensagem(erro.getMessage());
             throw erro;
         } finally {
+            auditoria.setDadosAnteriores(ContextoAuditoria.estadoAnterior());
+            auditoria.setDadosPosteriores(ContextoAuditoria.estadoPosterior());
             auditoria.setDuracaoMs(System.currentTimeMillis() - inicio);
             auditoriaService.registrar(auditoria);
+            ContextoAuditoria.limparEstados();
         }
     }
 

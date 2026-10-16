@@ -153,7 +153,7 @@
                 </div>
 
                 <!-- Aplicar desconto (somente gerente) -->
-                <div class="card shadow-sm mb-3" th:if="${podeGerenciar}">
+                <div class="card shadow-sm mb-3" th:if="${podeGerenciar and statusAtual.permiteDesconto}">
                     <div class="card-header fw-medium">
                         <i class="bi bi-percent me-1"></i>Aplicar desconto
                     </div>
@@ -162,7 +162,7 @@
                             <input type="number"
                                    name="descontoPercentual"
                                    class="form-control"
-                                   min="0" max="100" step="0.01"
+                                   min="0" max="20" step="0.01"
                                    th:value="${pedido.descontoPercentual}"/>
                             <button type="submit" class="btn btn-outline-primary">Aplicar</button>
                         </form>

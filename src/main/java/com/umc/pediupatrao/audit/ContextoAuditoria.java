@@ -14,7 +14,31 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public final class ContextoAuditoria {
 
+    private static final ThreadLocal<String> ESTADO_ANTERIOR = new ThreadLocal<>();
+    private static final ThreadLocal<String> ESTADO_POSTERIOR = new ThreadLocal<>();
+
     private ContextoAuditoria() {
+    }
+
+    public static void registrarEstadoAnterior(String estado) {
+        ESTADO_ANTERIOR.set(estado);
+    }
+
+    public static void registrarEstadoPosterior(String estado) {
+        ESTADO_POSTERIOR.set(estado);
+    }
+
+    public static String estadoAnterior() {
+        return ESTADO_ANTERIOR.get();
+    }
+
+    public static String estadoPosterior() {
+        return ESTADO_POSTERIOR.get();
+    }
+
+    public static void limparEstados() {
+        ESTADO_ANTERIOR.remove();
+        ESTADO_POSTERIOR.remove();
     }
 
     public static String usuarioAtual() {

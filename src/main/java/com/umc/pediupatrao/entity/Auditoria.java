@@ -19,6 +19,8 @@ public class Auditoria {
     private String entidade;
     private String metodo;
     private String argumentos;
+    private String dadosAnteriores;
+    private String dadosPosteriores;
     private boolean sucesso;
     private String mensagem;
     private String ip;
@@ -102,6 +104,22 @@ public class Auditoria {
 
     public void setArgumentos(String argumentos) {
         this.argumentos = argumentos;
+    }
+
+    public String getDadosAnteriores() {
+        return dadosAnteriores;
+    }
+
+    public void setDadosAnteriores(String dadosAnteriores) {
+        this.dadosAnteriores = dadosAnteriores;
+    }
+
+    public String getDadosPosteriores() {
+        return dadosPosteriores;
+    }
+
+    public void setDadosPosteriores(String dadosPosteriores) {
+        this.dadosPosteriores = dadosPosteriores;
     }
 
     public boolean isSucesso() {

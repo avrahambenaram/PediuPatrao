@@ -77,9 +77,20 @@
                                 <div th:if="${!#strings.isEmpty(registro.argumentos)}" class="small">
                                     <code th:text="${registro.argumentos}"></code>
                                 </div>
+                                <div th:if="${!#strings.isEmpty(registro.dadosAnteriores)}" class="small text-muted">
+                                    <span class="fw-medium">Antes:</span>
+                                    <code th:text="${registro.dadosAnteriores}"></code>
+                                </div>
+                                <div th:if="${!#strings.isEmpty(registro.dadosPosteriores)}" class="small text-muted">
+                                    <span class="fw-medium">Depois:</span>
+                                    <code th:text="${registro.dadosPosteriores}"></code>
+                                </div>
                                 <div th:if="${!#strings.isEmpty(registro.mensagem)}"
                                      class="small text-danger" th:text="${registro.mensagem}"></div>
-                                <span th:if="${#strings.isEmpty(registro.argumentos) and #strings.isEmpty(registro.mensagem)}"
+                                <span th:if="${#strings.isEmpty(registro.argumentos)
+                                              and #strings.isEmpty(registro.dadosAnteriores)
+                                              and #strings.isEmpty(registro.dadosPosteriores)
+                                              and #strings.isEmpty(registro.mensagem)}"
                                       class="text-muted">—</span>
                             </td>
                         </tr>
