@@ -11,6 +11,9 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
+        <a href="/pedidos/novo" class="btn btn-primary" th:if="${podeRegistrar}">
+            <i class="bi bi-plus-lg me-1"></i> Novo Pedido
+        </a>
     </div>
 
     <!-- Mensagens de feedback -->
@@ -38,13 +41,14 @@
                         <th>Total</th>
                         <th>Responsável</th>
                         <th>Entrada</th>
-                        <th class="pe-4">Status</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- Lista vazia -->
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="8" class="text-center text-muted py-5">
+                        <td colspan="9" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             Nenhum pedido encontrado.
                         </td>
@@ -77,13 +81,27 @@
                         <td th:text="${pedido.registradoPor != null ? pedido.registradoPor : '—'}"></td>
                         <td class="text-muted small"
                             th:text="${pedido.dataHora != null ? #temporals.format(pedido.dataHora, 'dd/MM/yyyy HH:mm') : '—'}"></td>
-                        <td class="pe-4">
+                        <td>
                             <span class="badge"
                                   th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
                                                   (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
                                                   (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
                                   th:text="${pedido.status}">
                             </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a th:href="@{/pedidos/{id}(id=${pedido.id})}"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-eye"></i> Abrir
+                            </a>
+                            <form th:if="${podeGerenciar and pedido.status != 'CANCELADO'}"
+                                  th:action="@{/pedidos/cancelar/{id}(id=${pedido.id})}"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Deseja realmente cancelar este pedido?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 </tbody>

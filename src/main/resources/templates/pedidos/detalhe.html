@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pedido</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/pedidos" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-receipt me-2 text-primary"></i>Pedido
+            <span class="text-muted fs-6" th:text="${pedido.id}"></span>
+        </h2>
+    </div>
+
+    <!-- Mensagens de feedback -->
+    <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Itens e valores -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header fw-medium">
+                    <i class="bi bi-list-ul me-1"></i>Itens
+                </div>
+                <div class="card-body p-0">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-end">Preço</th>
+                                <th class="text-center">Qtd</th>
+                                <th class="text-end pe-3">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${pedido.itens}">
+                                <td class="ps-3" th:text="${item.nome}"></td>
+                                <td class="text-end"
+                                    th:text="${'R$ ' + #numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></td>
+                                <td class="text-center" th:text="${item.quantidade}"></td>
+                                <td class="text-end pe-3"
+                                    th:text="${'R$ ' + #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-group-divider">
+                            <tr>
+                                <td colspan="3" class="text-end fw-medium">Subtotal</td>
+                                <td class="text-end pe-3"
+                                    th:text="${'R$ ' + #numbers.formatDecimal(pedido.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-medium">Desconto</td>
+                                <td class="text-end pe-3"
+                                    th:text="${'-R$ ' + #numbers.formatDecimal(pedido.valorDesconto, 1, 'POINT', 2, 'COMMA')
+                                            + (pedido.descontoPercentual > 0 ? ' (' + #numbers.formatDecimal(pedido.descontoPercentual, 1, 'POINT', 2, 'COMMA') + '%)' : '')}"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Total</td>
+                                <td class="text-end pe-3 fw-bold"
+                                    th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dados e ações -->
+        <div class="col-lg-5">
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <span class="text-muted">Cliente:</span>
+                        <span class="fw-medium" th:text="${pedido.clienteId}"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted">Responsável:</span>
+                        <span th:text="${pedido.registradoPor != null ? pedido.registradoPor : '—'}"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted">Entrada:</span>
+                        <span th:text="${pedido.dataHora != null ? #temporals.format(pedido.dataHora, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Status:</span>
+                        <span class="badge"
+                              th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
+                                              (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
+                                              (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
+                              th:text="${pedido.status}">
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-danger" th:if="${pedido.status == 'CANCELADO'}">
+                <i class="bi bi-x-circle-fill me-2"></i>Este pedido está cancelado.
+            </div>
+
+            <th:block th:unless="${pedido.status == 'CANCELADO'}">
+
+                <!-- Atualizar status -->
+                <div class="card shadow-sm mb-3" th:if="${podeRegistrar}">
+                    <div class="card-header fw-medium">
+                        <i class="bi bi-arrow-repeat me-1"></i>Atualizar status
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/pedidos/status/{id}(id=${pedido.id})}" method="post" class="d-flex gap-2">
+                            <select name="status" class="form-select">
+                                <option value="EM_PREPARO" th:selected="${pedido.status == 'EM_PREPARO'}">EM_PREPARO</option>
+                                <option value="ENTREGUE" th:selected="${pedido.status == 'ENTREGUE'}">ENTREGUE</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Aplicar desconto (somente gerente) -->
+                <div class="card shadow-sm mb-3" th:if="${podeGerenciar}">
+                    <div class="card-header fw-medium">
+                        <i class="bi bi-percent me-1"></i>Aplicar desconto
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/pedidos/desconto/{id}(id=${pedido.id})}" method="post" class="d-flex gap-2">
+                            <input type="number"
+                                   name="descontoPercentual"
+                                   class="form-control"
+                                   min="0" max="100" step="0.01"
+                                   th:value="${pedido.descontoPercentual}"/>
+                            <button type="submit" class="btn btn-outline-primary">Aplicar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Cancelar pedido (somente gerente) -->
+                <div class="card shadow-sm" th:if="${podeGerenciar}">
+                    <div class="card-body">
+                        <form th:action="@{/pedidos/cancelar/{id}(id=${pedido.id})}"
+                              method="post"
+                              onsubmit="return confirm('Deseja realmente cancelar este pedido?')">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-x-circle me-1"></i>Cancelar pedido
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </th:block>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

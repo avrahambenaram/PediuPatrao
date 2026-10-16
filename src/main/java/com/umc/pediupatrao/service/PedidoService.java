@@ -3,6 +3,7 @@ package com.umc.pediupatrao.service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -38,6 +39,7 @@ public class PedidoService {
     @Auditavel(tipo = AcaoAuditoria.CRIACAO, acao = "CRIAR_PEDIDO",
             descricao = "Criação de pedido", entidade = "pedidos")
     public Pedido criarPedido(PedidoRequest request) {
+        exigirPerfilOperacional();
         if (request == null || request.getItens() == null || request.getItens().isEmpty()) {
             throw new IllegalArgumentException("O pedido deve conter ao menos um item.");
         }
@@ -97,9 +99,14 @@ public class PedidoService {
         return pedidoRepository.findAll(Paginacao.criar(pagina, tamanho, "_id", Sort.Direction.ASC));
     }
 
+    public Optional<Pedido> buscarPorId(String id) {
+        return pedidoRepository.findById(id);
+    }
+
     @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "ATUALIZAR_STATUS_PEDIDO",
             descricao = "Atualização de status de pedido", entidade = "pedidos", registrarArgumentos = true)
     public Pedido atualizarStatus(String id, String status) {
+        exigirPerfilOperacional();
         if (STATUS_CANCELADO.equalsIgnoreCase(status)) {
             throw new IllegalArgumentException("Use a operação de cancelamento para cancelar o pedido.");
         }
@@ -119,6 +126,35 @@ public class PedidoService {
                 .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
         pedido.setStatus(STATUS_CANCELADO);
         return pedidoRepository.save(pedido);
+    }
+
+    @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "APLICAR_DESCONTO",
+            descricao = "Aplicação de desconto em pedido", entidade = "pedidos", registrarArgumentos = true)
+    public Pedido aplicarDesconto(String id, float descontoPercentual) {
+        if (!UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE)) {
+            throw new AccessDeniedException("Apenas o gerente pode aplicar descontos.");
+        }
+        if (descontoPercentual < 0f || descontoPercentual > PERCENTUAL_TOTAL) {
+            throw new IllegalArgumentException("O desconto deve estar entre 0 e 100%.");
+        }
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+        if (STATUS_CANCELADO.equalsIgnoreCase(pedido.getStatus())) {
+            throw new IllegalArgumentException("Não é possível aplicar desconto em pedido cancelado.");
+        }
+        float valorDesconto = arredondar(pedido.getSubtotal() * descontoPercentual / PERCENTUAL_TOTAL);
+        pedido.setDescontoPercentual(descontoPercentual);
+        pedido.setValorDesconto(valorDesconto);
+        pedido.setValorTotal(arredondar(pedido.getSubtotal() - valorDesconto));
+        return pedidoRepository.save(pedido);
+    }
+
+    private void exigirPerfilOperacional() {
+        if (!UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE)
+                && !UsuarioSessao.possuiPerfil(UsuarioRole.ATENDENTE)) {
+            throw new AccessDeniedException(
+                    "Apenas gerentes e atendentes podem registrar ou alterar pedidos.");
+        }
     }
 
     private float validarDesconto(float descontoPercentual) {

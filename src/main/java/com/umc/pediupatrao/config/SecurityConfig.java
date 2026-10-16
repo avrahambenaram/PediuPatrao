@@ -48,10 +48,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/registrar", "/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers("/produtos/**").hasRole("ADMIN")
                         .requestMatchers("/auditoria", "/auditoria/**").hasRole("ADMIN")
                         .requestMatchers("/api/auditorias/**").hasRole("ADMIN")
+                        .requestMatchers("/api/produtos/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
-                        .requestMatchers("/", "/clientes/**", "/pedidos/**", "/funcionarios/**", "/entregadores/**", "/horarios/**", "/produtos/**").authenticated()
+                        .requestMatchers("/", "/clientes/**", "/pedidos/**", "/funcionarios/**", "/entregadores/**", "/horarios/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                 ).exceptionHandling(exception -> exception
                   .accessDeniedHandler((request, response, ex) ->

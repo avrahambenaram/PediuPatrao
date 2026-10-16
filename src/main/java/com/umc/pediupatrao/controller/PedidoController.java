@@ -37,4 +37,9 @@ public class PedidoController {
     public Pedido cancelarPedido(@PathVariable String id) {
         return pedidoService.cancelar(id);
     }
+
+    @PutMapping("/{id}/desconto")
+    public Pedido aplicarDesconto(@PathVariable String id, @RequestParam float descontoPercentual) {
+        return pedidoService.aplicarDesconto(id, descontoPercentual);
+    }
 }

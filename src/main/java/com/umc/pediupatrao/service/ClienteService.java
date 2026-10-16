@@ -8,6 +8,7 @@ import com.umc.pediupatrao.util.Paginacao;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,10 @@ public class ClienteService {
 
     public Page<Cliente> listarPaginado(int pagina, int tamanho) {
         return clienteRepository.findAll(Paginacao.criar(pagina, tamanho, "nome", Sort.Direction.ASC));
+    }
+
+    public List<Cliente> listarTodos() {
+        return clienteRepository.findAll(Sort.by(Sort.Direction.ASC, "nome"));
     }
 
     @Auditavel(tipo = AcaoAuditoria.EXCLUSAO, acao = "EXCLUIR_CLIENTE",

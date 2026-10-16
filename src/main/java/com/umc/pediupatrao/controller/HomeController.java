@@ -1,18 +1,26 @@
 package com.umc.pediupatrao.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.umc.pediupatrao.dto.ItemPedidoRequest;
+import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Auditoria;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
+import com.umc.pediupatrao.entity.UsuarioRole;
 import com.umc.pediupatrao.service.AuditoriaService;
 import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
+import com.umc.pediupatrao.security.UsuarioSessao;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -121,9 +129,126 @@ public class HomeController {
         Page<Pedido> resultados = pedidoService.listarPaginado(pagina, tamanho);
         preencherPaginacao(model, resultados);
         model.addAttribute("pedidos", resultados.getContent());
-        model.addAttribute("content", "pedidos :: content");
-        log.info("Carregando fragmento: pedidos :: content");
+        model.addAttribute("podeRegistrar", podeRegistrarPedido());
+        model.addAttribute("podeGerenciar", UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE));
+        model.addAttribute("content", "pedidos/lista :: content");
+        log.info("Carregando fragmento: pedidos/lista :: content");
         return "layout";
+    }
+
+    @GetMapping("/pedidos/novo")
+    public String novoPedidoForm(Model model, RedirectAttributes redirectAttributes) {
+        if (!podeRegistrarPedido()) {
+            redirectAttributes.addFlashAttribute("erro", "Seu perfil não pode registrar pedidos.");
+            return "redirect:/pedidos";
+        }
+        model.addAttribute("clientes", clienteService.listarTodos());
+        model.addAttribute("produtos", produtoService.listarDisponiveis());
+        model.addAttribute("podeGerenciar", UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE));
+        model.addAttribute("content", "pedidos/form :: content");
+        return "layout";
+    }
+
+    @PostMapping("/pedidos/salvar")
+    public String salvarPedido(@RequestParam String clienteId,
+            @RequestParam(name = "produtoId", required = false) List<String> produtoIds,
+            @RequestParam(name = "quantidade", required = false) List<Integer> quantidades,
+            @RequestParam(name = "descontoPercentual", defaultValue = "0") float descontoPercentual,
+            RedirectAttributes redirectAttributes) {
+        try {
+            pedidoService.criarPedido(
+                    montarPedidoRequest(clienteId, produtoIds, quantidades, descontoPercentual));
+            redirectAttributes.addFlashAttribute("sucesso", "Pedido registrado com sucesso!");
+            return "redirect:/pedidos";
+        } catch (IllegalArgumentException | AccessDeniedException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/pedidos/novo";
+        }
+    }
+
+    @GetMapping("/pedidos/{id}")
+    public String detalhePedido(@PathVariable String id, Model model,
+            RedirectAttributes redirectAttributes) {
+        boolean encontrado = pedidoService.buscarPorId(id).map(pedido -> {
+            model.addAttribute("pedido", pedido);
+            return true;
+        }).orElse(false);
+
+        if (!encontrado) {
+            redirectAttributes.addFlashAttribute("erro", "Pedido não encontrado.");
+            return "redirect:/pedidos";
+        }
+
+        model.addAttribute("podeRegistrar", podeRegistrarPedido());
+        model.addAttribute("podeGerenciar", UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE));
+        model.addAttribute("content", "pedidos/detalhe :: content");
+        return "layout";
+    }
+
+    @PostMapping("/pedidos/status/{id}")
+    public String atualizarStatusPedido(@PathVariable String id,
+            @RequestParam String status,
+            RedirectAttributes redirectAttributes) {
+        try {
+            pedidoService.atualizarStatus(id, status);
+            redirectAttributes.addFlashAttribute("sucesso", "Status atualizado com sucesso!");
+        } catch (IllegalArgumentException | AccessDeniedException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/pedidos/" + id;
+    }
+
+    @PostMapping("/pedidos/desconto/{id}")
+    public String aplicarDescontoPedido(@PathVariable String id,
+            @RequestParam float descontoPercentual,
+            RedirectAttributes redirectAttributes) {
+        try {
+            pedidoService.aplicarDesconto(id, descontoPercentual);
+            redirectAttributes.addFlashAttribute("sucesso", "Desconto aplicado com sucesso!");
+        } catch (IllegalArgumentException | AccessDeniedException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/pedidos/" + id;
+    }
+
+    @PostMapping("/pedidos/cancelar/{id}")
+    public String cancelarPedido(@PathVariable String id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            pedidoService.cancelar(id);
+            redirectAttributes.addFlashAttribute("sucesso", "Pedido cancelado com sucesso!");
+        } catch (IllegalArgumentException | AccessDeniedException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/pedidos";
+    }
+
+    private boolean podeRegistrarPedido() {
+        return UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE)
+                || UsuarioSessao.possuiPerfil(UsuarioRole.ATENDENTE);
+    }
+
+    private PedidoRequest montarPedidoRequest(String clienteId, List<String> produtoIds,
+            List<Integer> quantidades, float descontoPercentual) {
+        PedidoRequest request = new PedidoRequest();
+        request.setClienteId(clienteId);
+        request.setDescontoPercentual(descontoPercentual);
+
+        List<ItemPedidoRequest> itens = new ArrayList<>();
+        if (produtoIds != null) {
+            for (int i = 0; i < produtoIds.size(); i++) {
+                if (produtoIds.get(i) == null || produtoIds.get(i).isBlank()) {
+                    continue;
+                }
+                ItemPedidoRequest item = new ItemPedidoRequest();
+                item.setProdutoId(produtoIds.get(i));
+                Integer quantidade = (quantidades != null && i < quantidades.size()) ? quantidades.get(i) : null;
+                item.setQuantidade(quantidade == null ? 0 : quantidade);
+                itens.add(item);
+            }
+        }
+        request.setItens(itens);
+        return request;
     }
 
     // ========================
@@ -139,6 +264,68 @@ public class HomeController {
         model.addAttribute("content", "produtos/lista :: content");
         log.info("Carregando fragmento: produtos/lista :: content");
         return "layout";
+    }
+
+    @GetMapping("/produtos/novo")
+    public String novoProdutoForm(Model model) {
+        model.addAttribute("produto", new Produto());
+        model.addAttribute("content", "produtos/form :: content");
+        return "layout";
+    }
+
+    @GetMapping("/produtos/editar/{id}")
+    public String editarProdutoForm(@PathVariable String id, Model model,
+            RedirectAttributes redirectAttributes) {
+        boolean encontrado = produtoService.buscarPorId(id).map(p -> {
+            model.addAttribute("produto", p);
+            return true;
+        }).orElse(false);
+
+        if (!encontrado) {
+            redirectAttributes.addFlashAttribute("erro", "Produto não encontrado.");
+            return "redirect:/produtos";
+        }
+
+        model.addAttribute("content", "produtos/form :: content");
+        return "layout";
+    }
+
+    @PostMapping("/produtos/salvar")
+    public String salvarProduto(@ModelAttribute Produto produto,
+            RedirectAttributes redirectAttributes) {
+        try {
+            produtoService.salvar(produto);
+            redirectAttributes.addFlashAttribute("sucesso", "Produto criado com sucesso!");
+        } catch (IllegalArgumentException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("erro", ex.getMessage());
+        }
+        return "redirect:/produtos";
+    }
+
+    @PostMapping("/produtos/editar/{id}")
+    public String atualizarProduto(@PathVariable String id,
+            @ModelAttribute Produto produto,
+            RedirectAttributes redirectAttributes) {
+        produto.setId(id);
+        try {
+            produtoService.salvar(produto);
+            redirectAttributes.addFlashAttribute("sucesso", "Produto atualizado com sucesso!");
+        } catch (IllegalArgumentException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("erro", ex.getMessage());
+        }
+        return "redirect:/produtos";
+    }
+
+    @PostMapping("/produtos/excluir/{id}")
+    public String excluirProduto(@PathVariable String id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            produtoService.excluir(id);
+            redirectAttributes.addFlashAttribute("sucesso", "Produto excluído com sucesso!");
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("erro", ex.getMessage());
+        }
+        return "redirect:/produtos";
     }
 
     // ========================
