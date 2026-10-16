@@ -83,9 +83,11 @@
                             th:text="${pedido.dataHora != null ? #temporals.format(pedido.dataHora, 'dd/MM/yyyy HH:mm') : '—'}"></td>
                         <td>
                             <span class="badge"
-                                  th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
+                                  th:classappend="${pedido.status == 'FINALIZADO'} ? 'bg-success' :
                                                   (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
-                                                  (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
+                                                  (${pedido.status == 'PRONTO'} ? 'bg-info text-dark' :
+                                                  (${pedido.status == 'SAIU_PARA_ENTREGA' or pedido.status == 'RETIRADO'} ? 'bg-primary' :
+                                                  (${pedido.status == 'EM_PREPARACAO'} ? 'bg-warning text-dark' : 'bg-secondary'))))"
                                   th:text="${pedido.status}">
                             </span>
                         </td>
@@ -94,10 +96,11 @@
                                class="btn btn-sm btn-outline-primary me-1">
                                 <i class="bi bi-eye"></i> Abrir
                             </a>
-                            <form th:if="${podeGerenciar and pedido.status != 'CANCELADO'}"
+                            <form th:if="${podeGerenciar and pedido.cancelavel}"
                                   th:action="@{/pedidos/cancelar/{id}(id=${pedido.id})}"
                                   method="post" class="d-inline"
-                                  onsubmit="return confirm('Deseja realmente cancelar este pedido?')">
+                                  onsubmit="return justificarCancelamento(this)">
+                                <input type="hidden" name="justificativa"/>
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </button>
@@ -141,6 +144,21 @@
             </nav>
         </div>
     </div>
+
+    <script>
+        function justificarCancelamento(form) {
+            const justificativa = prompt('Justificativa do cancelamento:');
+            if (justificativa === null) {
+                return false;
+            }
+            if (!justificativa.trim()) {
+                alert('Informe a justificativa do cancelamento.');
+                return false;
+            }
+            form.justificativa.value = justificativa.trim();
+            return true;
+        }
+    </script>
 
 </div>
 

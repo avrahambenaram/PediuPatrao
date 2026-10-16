@@ -2,6 +2,7 @@ package com.umc.pediupatrao.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Auditoria;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.PedidoStatus;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.entity.UsuarioRole;
@@ -169,16 +171,17 @@ public class HomeController {
     @GetMapping("/pedidos/{id}")
     public String detalhePedido(@PathVariable String id, Model model,
             RedirectAttributes redirectAttributes) {
-        boolean encontrado = pedidoService.buscarPorId(id).map(pedido -> {
-            model.addAttribute("pedido", pedido);
-            return true;
-        }).orElse(false);
-
-        if (!encontrado) {
+        Optional<Pedido> encontrado = pedidoService.buscarPorId(id);
+        if (encontrado.isEmpty()) {
             redirectAttributes.addFlashAttribute("erro", "Pedido não encontrado.");
             return "redirect:/pedidos";
         }
 
+        Pedido pedido = encontrado.get();
+        PedidoStatus statusAtual = PedidoStatus.from(pedido.getStatus());
+        model.addAttribute("pedido", pedido);
+        model.addAttribute("statusAtual", statusAtual);
+        model.addAttribute("proximosStatus", statusAtual.getProximos());
         model.addAttribute("podeRegistrar", podeRegistrarPedido());
         model.addAttribute("podeGerenciar", UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE));
         model.addAttribute("content", "pedidos/detalhe :: content");
@@ -213,9 +216,10 @@ public class HomeController {
 
     @PostMapping("/pedidos/cancelar/{id}")
     public String cancelarPedido(@PathVariable String id,
+            @RequestParam String justificativa,
             RedirectAttributes redirectAttributes) {
         try {
-            pedidoService.cancelar(id);
+            pedidoService.cancelar(id, justificativa);
             redirectAttributes.addFlashAttribute("sucesso", "Pedido cancelado com sucesso!");
         } catch (IllegalArgumentException | AccessDeniedException e) {
             redirectAttributes.addFlashAttribute("erro", e.getMessage());

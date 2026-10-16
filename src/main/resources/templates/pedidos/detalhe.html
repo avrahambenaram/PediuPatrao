@@ -97,13 +97,23 @@
                         <span class="text-muted">Entrada:</span>
                         <span th:text="${pedido.dataHora != null ? #temporals.format(pedido.dataHora, 'dd/MM/yyyy HH:mm') : '—'}"></span>
                     </div>
+                    <div class="mb-2" th:if="${pedido.dataHoraSaida != null}">
+                        <span class="text-muted">Saída:</span>
+                        <span th:text="${#temporals.format(pedido.dataHoraSaida, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="mb-2" th:if="${pedido.saidaPor != null}">
+                        <span class="text-muted">Responsável pela saída:</span>
+                        <span th:text="${pedido.saidaPor}"></span>
+                    </div>
                     <div>
                         <span class="text-muted">Status:</span>
                         <span class="badge"
-                              th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
+                              th:classappend="${pedido.status == 'FINALIZADO'} ? 'bg-success' :
                                               (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
-                                              (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
-                              th:text="${pedido.status}">
+                                              (${pedido.status == 'PRONTO'} ? 'bg-info text-dark' :
+                                              (${pedido.status == 'SAIU_PARA_ENTREGA' or pedido.status == 'RETIRADO'} ? 'bg-primary' :
+                                              (${pedido.status == 'EM_PREPARACAO'} ? 'bg-warning text-dark' : 'bg-secondary'))))"
+                              th:text="${statusAtual.descricao}">
                         </span>
                     </div>
                 </div>
@@ -111,9 +121,17 @@
 
             <div class="alert alert-danger" th:if="${pedido.status == 'CANCELADO'}">
                 <i class="bi bi-x-circle-fill me-2"></i>Este pedido está cancelado.
+                <div class="small mt-1" th:if="${pedido.canceladoPor != null}">
+                    Cancelado por <strong th:text="${pedido.canceladoPor}"></strong>
+                    <span th:if="${pedido.dataHoraCancelamento != null}"
+                          th:text="${' em ' + #temporals.format(pedido.dataHoraCancelamento, 'dd/MM/yyyy HH:mm')}"></span>.
+                </div>
+                <div class="small mt-1" th:if="${pedido.justificativaCancelamento != null}">
+                    Justificativa: <span th:text="${pedido.justificativaCancelamento}"></span>
+                </div>
             </div>
 
-            <th:block th:unless="${pedido.status == 'CANCELADO'}">
+            <th:block th:unless="${statusAtual.final}">
 
                 <!-- Atualizar status -->
                 <div class="card shadow-sm mb-3" th:if="${podeRegistrar}">
@@ -121,13 +139,16 @@
                         <i class="bi bi-arrow-repeat me-1"></i>Atualizar status
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/pedidos/status/{id}(id=${pedido.id})}" method="post" class="d-flex gap-2">
+                        <form th:if="${not #lists.isEmpty(proximosStatus)}"
+                              th:action="@{/pedidos/status/{id}(id=${pedido.id})}" method="post" class="d-flex gap-2">
                             <select name="status" class="form-select">
-                                <option value="EM_PREPARO" th:selected="${pedido.status == 'EM_PREPARO'}">EM_PREPARO</option>
-                                <option value="ENTREGUE" th:selected="${pedido.status == 'ENTREGUE'}">ENTREGUE</option>
+                                <option th:each="s : ${proximosStatus}" th:value="${s}" th:text="${s.descricao}"></option>
                             </select>
                             <button type="submit" class="btn btn-primary">Salvar</button>
                         </form>
+                        <span class="text-muted small" th:if="${#lists.isEmpty(proximosStatus)}">
+                            Nenhuma transição disponível para o status atual.
+                        </span>
                     </div>
                 </div>
 
@@ -149,11 +170,17 @@
                 </div>
 
                 <!-- Cancelar pedido (somente gerente) -->
-                <div class="card shadow-sm" th:if="${podeGerenciar}">
+                <div class="card shadow-sm" th:if="${podeGerenciar and pedido.cancelavel}">
+                    <div class="card-header fw-medium">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar pedido
+                    </div>
                     <div class="card-body">
                         <form th:action="@{/pedidos/cancelar/{id}(id=${pedido.id})}"
                               method="post"
                               onsubmit="return confirm('Deseja realmente cancelar este pedido?')">
+                            <label class="form-label small text-muted" for="justificativa">Justificativa</label>
+                            <textarea id="justificativa" name="justificativa" class="form-control mb-2"
+                                      rows="2" required></textarea>
                             <button type="submit" class="btn btn-outline-danger w-100">
                                 <i class="bi bi-x-circle me-1"></i>Cancelar pedido
                             </button>

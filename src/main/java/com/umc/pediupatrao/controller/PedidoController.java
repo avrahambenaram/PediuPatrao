@@ -34,8 +34,8 @@ public class PedidoController {
     }
 
     @PutMapping("/{id}/cancelar")
-    public Pedido cancelarPedido(@PathVariable String id) {
-        return pedidoService.cancelar(id);
+    public Pedido cancelarPedido(@PathVariable String id, @RequestParam String justificativa) {
+        return pedidoService.cancelar(id, justificativa);
     }
 
     @PutMapping("/{id}/desconto")
