@@ -333,6 +333,7 @@ public class HomeController {
     // ========================
     @GetMapping("/clientes")
     public String clientes(Model model) {
+        model.addAttribute("podeGerenciar", UsuarioSessao.possuiPerfil(UsuarioRole.ATENDENTE));
         model.addAttribute("content", "clientes/lista :: content");
         log.info("Carregando fragmento: clientes/lista :: content");
         return "layout";

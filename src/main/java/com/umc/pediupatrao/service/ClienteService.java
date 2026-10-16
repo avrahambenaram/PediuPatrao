@@ -3,10 +3,13 @@ package com.umc.pediupatrao.service;
 import com.umc.pediupatrao.audit.Auditavel;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.Cliente;
+import com.umc.pediupatrao.entity.UsuarioRole;
 import com.umc.pediupatrao.repository.ClienteRepository;
+import com.umc.pediupatrao.security.UsuarioSessao;
 import com.umc.pediupatrao.util.Paginacao;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +23,7 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
 
     public Cliente novoCliente(Cliente cliente) {
+        exigirAtendente();
         return clienteRepository.save(cliente);
     }
 
@@ -34,6 +38,7 @@ public class ClienteService {
     @Auditavel(tipo = AcaoAuditoria.EXCLUSAO, acao = "EXCLUIR_CLIENTE",
             descricao = "Exclusão de cliente", entidade = "clientes", registrarArgumentos = true)
     public void excluir(String id) {
+        exigirAtendente();
         clienteRepository.deleteById(id);
     }
 
@@ -44,6 +49,7 @@ public class ClienteService {
     @Auditavel(acao = "SALVAR_CLIENTE",
             descricao = "Cadastro ou atualização de cliente", entidade = "clientes")
     public Cliente salvar(Cliente cliente) {
+        exigirAtendente();
         if (cliente.getId() == null) {
             return clienteRepository.save(cliente);  // Cria um novo cliente
         }
@@ -53,6 +59,12 @@ public class ClienteService {
             } else {
                 throw new IllegalArgumentException("Cliente não encontrado para atualização.");
             }
+        }
+    }
+
+    private void exigirAtendente() {
+        if (!UsuarioSessao.possuiPerfil(UsuarioRole.ATENDENTE)) {
+            throw new AccessDeniedException("Apenas atendentes podem gerenciar clientes.");
         }
     }
 

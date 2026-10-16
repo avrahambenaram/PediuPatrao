@@ -9,7 +9,7 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-person-raised-hand me-2 text-primary"></i>Clientes
         </h2>
-        <a href="/clientes/novo" class="btn btn-primary">
+        <a href="/clientes/novo" class="btn btn-primary" th:if="${podeGerenciar}">
             <i class="bi bi-plus-lg me-1"></i> Novo Cliente
         </a>
     </div>
@@ -26,7 +26,7 @@
                         <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
-                <tbody id="clientes-tabela">
+                <tbody id="clientes-tabela" th:attr="data-pode-gerenciar=${podeGerenciar}">
                     <!-- Linhas carregadas via JavaScript -->
                 </tbody>
             </table>
@@ -40,6 +40,7 @@
         const TAMANHO = 20;
         const tabelaClientes = document.getElementById('clientes-tabela');
         const paginacaoClientes = document.getElementById('clientes-paginacao');
+        const PODE_GERENCIAR = tabelaClientes.dataset.podeGerenciar === 'true';
         let paginaAtual = 0;
 
         function formatarEndereco(cliente) {
@@ -82,18 +83,19 @@
 
             data.conteudo.forEach(cliente => {
                 const row = document.createElement('tr');
+                const acoes = PODE_GERENCIAR
+                    ? `<a href="/clientes/editar/${cliente.id}" class="btn btn-sm btn-outline-primary me-1">
+                           <i class="bi bi-pencil-fill"></i> Editar
+                       </a>
+                       <button class="btn btn-sm btn-outline-danger" onclick="excluirCliente('${cliente.id}')">
+                           <i class="bi bi-trash-fill"></i> Excluir
+                       </button>`
+                    : '<span class="text-muted">—</span>';
                 row.innerHTML = `
                     <td>${cliente.nome || '—'}</td>
                     <td>${cliente.telefone || '—'}</td>
                     <td>${formatarEndereco(cliente)}</td>
-                    <td class="text-end pe-4">
-                        <a href="/clientes/editar/${cliente.id}" class="btn btn-sm btn-outline-primary me-1">
-                            <i class="bi bi-pencil-fill"></i> Editar
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger" onclick="excluirCliente('${cliente.id}')">
-                            <i class="bi bi-trash-fill"></i> Excluir
-                        </button>
-                    </td>
+                    <td class="text-end pe-4">${acoes}</td>
                 `;
                 tabelaClientes.appendChild(row);
             });

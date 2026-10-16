@@ -3,6 +3,7 @@ package com.umc.pediupatrao.config;
 import com.umc.pediupatrao.service.UsuarioDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -52,8 +53,12 @@ public class SecurityConfig {
                         .requestMatchers("/auditoria", "/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
                         .requestMatchers("/api/auditorias/**").hasRole("ADMIN")
                         .requestMatchers("/api/produtos/**").hasRole("ADMIN")
+                        .requestMatchers("/clientes/novo", "/clientes/editar/**", "/clientes/salvar").hasRole("ATENDENTE")
+                        .requestMatchers("/clientes/**").hasAnyRole("GERENTE", "ATENDENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/clientes/**").hasAnyRole("GERENTE", "ATENDENTE")
+                        .requestMatchers("/api/clientes/**").hasRole("ATENDENTE")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
-                        .requestMatchers("/", "/clientes/**", "/pedidos/**", "/funcionarios/**", "/entregadores/**", "/horarios/**").authenticated()
+                        .requestMatchers("/", "/pedidos/**", "/funcionarios/**", "/entregadores/**", "/horarios/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                 ).exceptionHandling(exception -> exception
                   .accessDeniedHandler((request, response, ex) ->
