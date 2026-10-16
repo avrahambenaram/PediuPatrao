@@ -16,6 +16,7 @@ import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.AcaoAuditoria;
 import com.umc.pediupatrao.entity.ItemPedido;
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.PedidoStatus;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.UsuarioRole;
 import com.umc.pediupatrao.repository.PedidoRepository;
@@ -29,8 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PedidoService {
 
-    private static final String STATUS_INICIAL = "EM_PREPARO";
-    private static final String STATUS_CANCELADO = "CANCELADO";
+    private static final String STATUS_INICIAL = PedidoStatus.RECEBIDO.name();
     private static final float PERCENTUAL_TOTAL = 100f;
 
     private final PedidoRepository pedidoRepository;
@@ -107,24 +107,53 @@ public class PedidoService {
             descricao = "Atualização de status de pedido", entidade = "pedidos", registrarArgumentos = true)
     public Pedido atualizarStatus(String id, String status) {
         exigirPerfilOperacional();
-        if (STATUS_CANCELADO.equalsIgnoreCase(status)) {
+        PedidoStatus destino = PedidoStatus.from(status);
+        if (destino == PedidoStatus.CANCELADO) {
             throw new IllegalArgumentException("Use a operação de cancelamento para cancelar o pedido.");
         }
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-        pedido.setStatus(status);
+
+        Pedido pedido = buscar(id);
+        PedidoStatus atual = PedidoStatus.from(pedido.getStatus());
+        if (atual.isFinal()) {
+            throw new IllegalArgumentException(
+                    "Não é possível alterar o status de um pedido já " + atual.getDescricao().toLowerCase() + ".");
+        }
+        if (!atual.podeTransicionarPara(destino)) {
+            throw new IllegalArgumentException("Transição inválida: de \"" + atual.getDescricao()
+                    + "\" para \"" + destino.getDescricao() + "\".");
+        }
+        if (destino.exigeSaida()) {
+            pedido.setSaidaPor(UsuarioSessao.username());
+            pedido.setDataHoraSaida(Instant.now());
+        }
+        pedido.setStatus(destino.name());
         return pedidoRepository.save(pedido);
     }
 
     @Auditavel(tipo = AcaoAuditoria.ATUALIZACAO, acao = "CANCELAR_PEDIDO",
             descricao = "Cancelamento de pedido", entidade = "pedidos", registrarArgumentos = true)
-    public Pedido cancelar(String id) {
+    public Pedido cancelar(String id, String justificativa) {
         if (!UsuarioSessao.possuiPerfil(UsuarioRole.GERENTE)) {
             throw new AccessDeniedException("Apenas o gerente pode cancelar pedidos.");
         }
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-        pedido.setStatus(STATUS_CANCELADO);
+        if (justificativa == null || justificativa.isBlank()) {
+            throw new IllegalArgumentException("O cancelamento exige justificativa.");
+        }
+
+        Pedido pedido = buscar(id);
+        PedidoStatus atual = PedidoStatus.from(pedido.getStatus());
+        if (atual.isFinal()) {
+            throw new IllegalArgumentException(
+                    "Não é possível cancelar um pedido já " + atual.getDescricao().toLowerCase() + ".");
+        }
+        if (!atual.podeCancelar()) {
+            throw new IllegalArgumentException(
+                    "O pedido não pode ser cancelado após sair para entrega ou retirada.");
+        }
+        pedido.setStatus(PedidoStatus.CANCELADO.name());
+        pedido.setCanceladoPor(UsuarioSessao.username());
+        pedido.setDataHoraCancelamento(Instant.now());
+        pedido.setJustificativaCancelamento(justificativa.trim());
         return pedidoRepository.save(pedido);
     }
 
@@ -137,16 +166,22 @@ public class PedidoService {
         if (descontoPercentual < 0f || descontoPercentual > PERCENTUAL_TOTAL) {
             throw new IllegalArgumentException("O desconto deve estar entre 0 e 100%.");
         }
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-        if (STATUS_CANCELADO.equalsIgnoreCase(pedido.getStatus())) {
-            throw new IllegalArgumentException("Não é possível aplicar desconto em pedido cancelado.");
+        Pedido pedido = buscar(id);
+        PedidoStatus atual = PedidoStatus.from(pedido.getStatus());
+        if (atual.isFinal()) {
+            throw new IllegalArgumentException("Não é possível aplicar desconto em pedido já "
+                    + atual.getDescricao().toLowerCase() + ".");
         }
         float valorDesconto = arredondar(pedido.getSubtotal() * descontoPercentual / PERCENTUAL_TOTAL);
         pedido.setDescontoPercentual(descontoPercentual);
         pedido.setValorDesconto(valorDesconto);
         pedido.setValorTotal(arredondar(pedido.getSubtotal() - valorDesconto));
         return pedidoRepository.save(pedido);
+    }
+
+    private Pedido buscar(String id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
     }
 
     private void exigirPerfilOperacional() {

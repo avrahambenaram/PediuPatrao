@@ -21,6 +21,11 @@ public class Pedido {
     private String registradoPor;
     private Instant dataHora;
     private String status;
+    private String saidaPor;
+    private Instant dataHoraSaida;
+    private String canceladoPor;
+    private Instant dataHoraCancelamento;
+    private String justificativaCancelamento;
 
     public String getId() {
         return id;
@@ -100,5 +105,53 @@ public class Pedido {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isCancelavel() {
+        try {
+            return PedidoStatus.from(status).podeCancelar();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String getSaidaPor() {
+        return saidaPor;
+    }
+
+    public void setSaidaPor(String saidaPor) {
+        this.saidaPor = saidaPor;
+    }
+
+    public Instant getDataHoraSaida() {
+        return dataHoraSaida;
+    }
+
+    public void setDataHoraSaida(Instant dataHoraSaida) {
+        this.dataHoraSaida = dataHoraSaida;
+    }
+
+    public String getCanceladoPor() {
+        return canceladoPor;
+    }
+
+    public void setCanceladoPor(String canceladoPor) {
+        this.canceladoPor = canceladoPor;
+    }
+
+    public Instant getDataHoraCancelamento() {
+        return dataHoraCancelamento;
+    }
+
+    public void setDataHoraCancelamento(Instant dataHoraCancelamento) {
+        this.dataHoraCancelamento = dataHoraCancelamento;
+    }
+
+    public String getJustificativaCancelamento() {
+        return justificativaCancelamento;
+    }
+
+    public void setJustificativaCancelamento(String justificativaCancelamento) {
+        this.justificativaCancelamento = justificativaCancelamento;
     }
 }
